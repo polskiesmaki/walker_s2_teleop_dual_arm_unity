@@ -1,0 +1,10 @@
+# ninja log v5
+3	336	1779204452621851970	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c15749332327834c
+1	341	1779204452626852019	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	423fc7813d2f1cc
+1	360	1779204452645852203	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	a3e709a8e7d167ac
+3	391	1779204452676852504	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	1d334a108948ee3d
+3	409	1779204452694852678	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	c82b72c16c432bdc
+1	458	1779204452741853134	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	d6e139153eb98b91
+0	561	1779204452844854133	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	9d9a5774cc6eef45
+2	577	1779204452861854298	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	96f844e0704be471
+577	607	1779204452892854598	/home/rossmannwalker/Walker_S2_Teleop_dual_arm/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/1q4m1h2d/obj/arm64-v8a/libgame.so	71bb1b0a93c70e32

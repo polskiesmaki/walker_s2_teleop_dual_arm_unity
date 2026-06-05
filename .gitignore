@@ -1,0 +1,9 @@
+Library/
+Temp/
+Logs/
+obj/
+Builds/
+UserSettings/
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+*.apk
+build/
