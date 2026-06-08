@@ -11,19 +11,30 @@ public class MoveItDualArmPublisher : MonoBehaviour
     public GameObject leftController;
     public GameObject rightController;
 
-    // Bezpieczna pozycja początkowa robota
-    private Vector3 safeLeftRobotPos = new Vector3(0.4f, 0.3f, 0.2f);   
-    private Vector3 safeRightRobotPos = new Vector3(0.4f, -0.3f, 0.2f); 
+    // =========================================================
+    // POZYCJA "BOKSERA" - Bezpieczna pozycja startowa
+    // =========================================================
+    // X (przód): mocno przed robota (40 cm)
+    // Y (boki): rozsądnie na boki (30 cm lewo, -30 cm prawo)
+    // Z (góra): wysoko! (20 cm od miednicy)
+    // Zmień w MoveItDualArmPublisher.cs
+    private Vector3 safeLeftRobotPos = new Vector3(0.40f, 0.20f, 0.10f);   
+    private Vector3 safeRightRobotPos = new Vector3(0.40f, -0.20f, 0.10f); // Y ustawione na +/- 0.20
+
+    // Ustawiam rotację IDEALNIE na wprost, dłońmi w dół
+    private QuaternionMsg relaxedOrientation = new QuaternionMsg 
+    { 
+        x = 0.0, y = 0.707, z = 0.0, w = 0.707 
+    };
 
     private Vector3 initialLeftPos;
     private Vector3 initialRightPos;
 
-    private float publishRate = 0.1f; // 10 pakietów na sekundę
+    private float publishRate = 0.03f;
     private float nextPublishTime = 0f;
 
-    // KALIBRACJA
     private bool isCalibrated = false;
-    private float calibrationTimer = 5.0f; // 5 sekund na przygotowanie po starcie!
+    private float calibrationTimer = 5.0f;
 
     void Start()
     {
@@ -34,12 +45,10 @@ public class MoveItDualArmPublisher : MonoBehaviour
 
     void Update()
     {
-        // 1. FAZA KALIBRACJI: Czekamy 5 sekund, zanim zaczniemy liczyć ruch
         if (!isCalibrated)
         {
             calibrationTimer -= Time.deltaTime;
             
-            // W trakcie odliczania ciągle aktualizujemy pozycję bazową
             if (leftController != null) initialLeftPos = leftController.transform.position;
             if (rightController != null) initialRightPos = rightController.transform.position;
 
@@ -48,10 +57,9 @@ public class MoveItDualArmPublisher : MonoBehaviour
                 isCalibrated = true;
                 Debug.Log("=== KALIBRACJA ZAKOŃCZONA - WYSYŁAMY DANE ===");
             }
-            return; // Przerywamy Update - nie wysyłamy danych, dopóki timer nie minie
+            return; 
         }
 
-        // 2. FAZA WYSYŁANIA (Z OGRANICZNIKIEM 0.1s)
         if (Time.time < nextPublishTime) return;
         bool dataSent = false;
 
@@ -73,15 +81,23 @@ public class MoveItDualArmPublisher : MonoBehaviour
     void PublishRelativePose(GameObject controller, Vector3 initialControllerPos, Vector3 safeRobotPos, string topic)
     {
         Vector3 deltaUnity = controller.transform.position - initialControllerPos;
-        
-        // Translacja współrzędnych z Unity do ROS 2
         Vector3 deltaROS = new Vector3(deltaUnity.z, -deltaUnity.x, deltaUnity.y);
+
+        // KLATKA OCHRONNA: 30 cm w każdą stronę maksymalnego wychylenia
+        float maxReach = 0.30f;
+        deltaROS.x = Mathf.Clamp(deltaROS.x, -maxReach, maxReach); 
+        deltaROS.y = Mathf.Clamp(deltaROS.y, -maxReach, maxReach); 
+        deltaROS.z = Mathf.Clamp(deltaROS.z, -maxReach, maxReach); 
+
         Vector3 finalTargetPos = safeRobotPos + deltaROS;
+
+        // Ochrona przed wbiciem w tułów: X NIGDY nie schodzi poniżej 15cm -> 25 cm (change) od osi
+        if(finalTargetPos.x < 0.15f) finalTargetPos.x = 0.15f;
 
         PoseMsg msg = new PoseMsg
         {
             position = new PointMsg { x = finalTargetPos.x, y = finalTargetPos.y, z = finalTargetPos.z },
-            orientation = new QuaternionMsg { x = 0.0, y = 0.0, z = 0.0, w = 1.0 } // Zamrożona rotacja (łatwiejsze dla IK)
+            orientation = relaxedOrientation 
         };
 
         ros.Publish(topic, msg);
